@@ -3,61 +3,10 @@ import axios from 'axios';
 import { Modal } from 'bootstrap';
 
 function App() {
-  const { VITE_APP_BASEURL, VITE_APP_APIPATH } = import.meta.env;
+  const { VITE_BASE_URL, VITE_API_PATH } = import.meta.env;
   const [formData, setFormData] = useState(null);
   const [isAuth, setIsAuth] = useState(false);
-  const [products, setProducts] = useState([
-    {
-        category: "甜甜圈",
-        content: "尺寸：14x14cm",
-        description: "濃郁的草莓風味，中心填入滑順不膩口的卡士達內餡，帶來滿滿幸福感！",
-        id: "-L9tH8jxVb2Ka_DYPwng",
-        is_enabled: 1,
-        origin_price: 150,
-        price: 99,
-        title: "草莓莓果夾心圈",
-        unit: "元",
-        num: 10,
-        imageUrl: "https://images.unsplash.com/photo-1583182332473-b31ba08929c8",
-        imagesUrl: [
-            "https://images.unsplash.com/photo-1626094309830-abbb0c99da4a",
-            "https://images.unsplash.com/photo-1559656914-a30970c1affd"
-        ]
-    },
-    {
-        category: "蛋糕",
-        content: "尺寸：6寸",
-        description: "蜜蜂蜜蛋糕，夾層夾上酸酸甜甜的檸檬餡，清爽可口的滋味讓人口水直流！",
-        id: "-McJ-VvcwfN1_Ye_NtVA",
-        is_enabled: 1,
-        origin_price: 1000,
-        price: 900,
-        title: "蜂蜜檸檬蛋糕",
-        unit: "個",
-        num: 1,
-        imageUrl: "https://images.unsplash.com/photo-1627834377411-8da5f4f09de8?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=1001&q=80",
-        imagesUrl: [
-            "https://images.unsplash.com/photo-1618888007540-2bdead974bbb?ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=987&q=80",
-        ]
-    },
-    {
-        category: "蛋糕",
-        content: "尺寸：6寸",
-        description: "法式煎薄餅加上濃郁可可醬，呈現經典的美味及口感。",
-        id: "-McJ-VyqaFlLzUMmpPpm",
-        is_enabled: 1,
-        origin_price: 700,
-        price: 600,
-        title: "暗黑千層",
-        unit: "個",
-        num: 15,
-        imageUrl: "https://images.unsplash.com/photo-1505253149613-112d21d9f6a9?ixid=MnwxMjA3fDB8MHxzZWFyY2h8NDZ8fGNha2V8ZW58MHx8MHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=60",
-        imagesUrl: [
-            "https://images.unsplash.com/flagged/photo-1557234985-425e10c9d7f1?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MTA5fHxjYWtlfGVufDB8fDB8fA%3D%3D&ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=60",
-            "https://images.unsplash.com/photo-1540337706094-da10342c93d8?ixid=MnwxMjA3fDB8MHxzZWFyY2h8NDR8fGNha2V8ZW58MHx8MHx8&ixlib=rb-1.2.1&auto=format&fit=crop&w=700&q=60"
-        ]
-    }
-  ]);
+  const [products, setProducts] = useState([]);
   const [tempProduct, setTempProduct] = useState({});
 
   const modalRef = useRef(null);
@@ -81,14 +30,60 @@ function App() {
     })
   };
 
-  const userlogin = async () => {
+  // 登入
+  const userlogin = async (e) => {
+    e.preventDefault();
     try {
-      const res = await axios.post(`${VITE_APP_BASEURL}/admin/signin`, formData);
+      const res = await axios.post(`${VITE_BASE_URL}/admin/signin`, formData);
       const { token, expired } = res.data;
       document.cookie = `coupont=${token}; expires=${new Date(expired)}; path=/`;
       setIsAuth(true);
+      axios.defaults.headers.common['Authorization'] = token;
+      getProducts();
+      alert('登入成功');
     } catch (error) {
-      console.log(error);
+      console.error(error);
+    }
+  };
+
+  // 檢查使用者是否登入
+  const checkUserLogin = async () => {
+    try {
+      await axios.post(`${VITE_BASE_URL}/api/user/check`);
+      setIsAuth(true);
+      getProducts();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    const token = document.cookie.replace(
+      /(?:(?:^|.*;\s*)coupont\s*\=\s*([^;]*).*$)|^.*$/,
+      "$1",
+    );
+    axios.defaults.headers.common['Authorization'] = token;
+    checkUserLogin();
+  }, []);
+
+  // 取得產品列表
+  const getProducts = async () => {
+    try {
+      const res = await axios.get(`${VITE_BASE_URL}/api/${VITE_API_PATH}/admin/products`);
+      setProducts(res.data.products);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // 登出
+  const userLogout = async () => {
+    try {
+      await axios.post(`${VITE_BASE_URL}/logout`);
+      setIsAuth(false);
+      alert('登出成功');
+    } catch (error) {
+      console.error(error);
     }
   };
 
@@ -97,6 +92,9 @@ function App() {
       <div className='container'>
         {
           isAuth ? (<>
+            <div className='text-end mt-5'>
+              <button type='button' className="btn btn-outline-primary btn-sm" onClick={userLogout}>登出</button>
+            </div>
             <table className="table">
                 <thead>
                 <tr>
@@ -109,7 +107,7 @@ function App() {
                 </thead>
                 <tbody>
                     {
-                        products.map((prd) => {
+                      products.map((prd) => {
                             return (
                                 <tr key={prd.id}>
                                     <td className="align-middle">{ prd.title }</td>
@@ -170,15 +168,17 @@ function App() {
           <div className='row justify-content-center mt-5'>
             <div className='col-md-10 col-lg-6'>
               <h3 className="text-center">請先登入</h3>
-              <div className="mb-3">
-                <label htmlFor="username" className="form-label">信箱</label>
-                <input id="username" type="email" name="username" className="form-control" placeholder="請輸入信箱" onChange={(e) => handleInput(e)} />
-              </div>
-              <div className="mb-3">
-                <label htmlFor="password" className="form-label">密碼</label>
-                <input type="password" className="form-control" name="password" id="password" placeholder="請輸入密碼" onChange={(e) => handleInput(e)} />
-              </div>
-              <button type="button" className="btn btn-primary w-100" onClick={userlogin}>登入</button>
+              <form>
+                <div className="mb-3">
+                  <label htmlFor="username" className="form-label">信箱</label>
+                  <input id="username" type="email" name="username" className="form-control" placeholder="請輸入信箱" onChange={(e) => handleInput(e)} />
+                </div>
+                <div className="mb-3">
+                  <label htmlFor="password" className="form-label">密碼</label>
+                  <input type="password" className="form-control" name="password" id="password" placeholder="請輸入密碼" onChange={(e) => handleInput(e)} />
+                </div>
+                <button type="submit" className="btn btn-primary w-100" onClick={(e) => userlogin(e)}>登入</button>
+              </form>
             </div>
           </div>
           </>)

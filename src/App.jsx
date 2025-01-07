@@ -175,7 +175,7 @@ function App() {
                 </div>
                 <div className="mb-3">
                   <label htmlFor="password" className="form-label">密碼</label>
-                  <input type="password" className="form-control" name="password" id="password" placeholder="請輸入密碼" onChange={(e) => handleInput(e)} />
+                  <input type="password" className="form-control" name="password" autoComplete="true" id="password" placeholder="請輸入密碼" onChange={(e) => handleInput(e)} />
                 </div>
                 <button type="submit" className="btn btn-primary w-100" onClick={(e) => userlogin(e)}>登入</button>
               </form>

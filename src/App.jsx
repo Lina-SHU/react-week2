@@ -168,7 +168,7 @@ function App() {
           <div className='row justify-content-center mt-5'>
             <div className='col-md-10 col-lg-6'>
               <h3 className="text-center">請先登入</h3>
-              <form>
+              <form onSubmit={userlogin}>
                 <div className="mb-3">
                   <label htmlFor="username" className="form-label">信箱</label>
                   <input id="username" type="email" name="username" className="form-control" placeholder="請輸入信箱" onChange={(e) => handleInput(e)} />
@@ -177,7 +177,7 @@ function App() {
                   <label htmlFor="password" className="form-label">密碼</label>
                   <input type="password" className="form-control" name="password" autoComplete="true" id="password" placeholder="請輸入密碼" onChange={(e) => handleInput(e)} />
                 </div>
-                <button type="submit" className="btn btn-primary w-100" onClick={(e) => userlogin(e)}>登入</button>
+                <button type="submit" className="btn btn-primary w-100">登入</button>
               </form>
             </div>
           </div>
